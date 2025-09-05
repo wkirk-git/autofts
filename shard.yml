@@ -1,0 +1,17 @@
+name: autofts
+version: 0.1.0
+
+authors:
+  - William Kirk <wkirk-git@mailbox.org>
+
+targets:
+  autofts:
+    main: src/autofts.cr
+
+crystal: '>= 1.11.2'
+
+dependencies:
+  sqlite3:
+    github: crystal-lang/crystal-sqlite3
+    
+license: MIT
