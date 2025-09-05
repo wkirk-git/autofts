@@ -1,0 +1,104 @@
+= NL FTS Query Engine (Crystal)
+Author Name <you@example.com>
+:toc:
+:icons: font
+:source-highlighter: rouge
+
+A dynamic natural-language query engine for SQLite full-text search (FTS) built in Crystal.
+
+It allows you to:
+
+* Query SQLite FTS tables using plain English
+* Support quoted phrases, boolean operators (AND, OR, NOT), and proximity searches (NEAR/n)
+* Infer column types dynamically (Int32, Float64, Time, String) for filters
+* Return results as JSON
+
+== Features
+
+* Dynamic schema discovery: Detects tables ending in `_fts` and their columns
+* Type inference: Examines sample records to determine numeric, string, or date columns
+* Natural language support:
+  ** Quoted phrases: `"plant based cooking"`
+  ** Boolean operators: `and`, `or`, `not`
+  ** Proximity operators: `"plant near 5 based"` → `NEAR/5`
+  ** Numeric and date comparisons: `"less than 10"`, `"after 2020"`
+* JSON output: Includes query, generated SQL, row count, and results
+
+== Installation
+
+1. Install Crystal: https://crystal-lang.org/install/
+2. Clone this repository:
+
+[source,bash]
+----
+git clone https://github.com/yourusername/nl_fts_crystal.git
+cd nl_fts_crystal
+----
+
+3. Run the program:
+
+[source,bash]
+----
+crystal run autofts_nlsql.cr <database_file> "<natural language query>"
+----
+
+== Usage Examples
+
+=== Basic Query
+
+[source,bash]
+----
+crystal run autofts_nlsql.cr blog.sqlite "find posts about \"plant based cooking\" not meat after 2020 top 5"
+----
+
+Sample JSON output:
+
+[source,json]
+----
+{
+  "query": "find posts about \"plant based cooking\" not meat after 2020 top 5",
+  "sql": "SELECT rowid, * FROM posts_fts WHERE posts_fts MATCH '\"plant based cooking\" NOT meat' AND created_at >= '2020-01-01' LIMIT 5",
+  "count": 5,
+  "rows": [
+    { "rowid": "7", "title": "Plant Based Recipes", "created_at": "2021-06-12", "body": "..." },
+    { "rowid": "12", "title": "Vegan Cooking Tips", "created_at": "2021-05-02", "body": "..." }
+  ]
+}
+----
+
+=== Boolean Queries
+
+[source,bash]
+----
+crystal run autofts_nlsql.cr blog.sqlite "find posts about cooking and vegan not meat"
+----
+
+Translates to:
+
+[source,sql]
+----
+MATCH 'cooking AND vegan NOT meat'
+----
+
+=== Proximity Queries
+
+[source,bash]
+----
+crystal run autofts_nlsql.cr blog.sqlite "find posts about plant near 5 based"
+----
+
+Translates to:
+
+[source,sql]
+----
+MATCH 'plant NEAR/5 based'
+----
+
+=== Numeric & Date Filters
+
+[source,bash]
+----
+crystal run autofts_nlsql.cr blog.sqlite "find posts after 2020 with price less than 20"
+----
+
+Filters are dynamically applied to the correct column based on inferred types.
